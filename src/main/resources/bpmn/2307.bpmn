@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1frby07" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.1">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1frby07" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="2.2.4">
   <bpmn:process id="study_camunda_2307_process" name="Котофактные письма" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_0dnldf8</bpmn:outgoing>
@@ -31,17 +31,37 @@
       <bpmn:outgoing>SequenceFlow_11cfmzk</bpmn:outgoing>
     </bpmn:parallelGateway>
     <bpmn:sequenceFlow id="SequenceFlow_0uzafxt" sourceRef="picture_delegate" targetRef="ExclusiveGateway_0d4hk7u" />
-    <bpmn:sequenceFlow id="SequenceFlow_149udra" sourceRef="watermark_delegate" targetRef="email_delegate" />
+    <bpmn:sequenceFlow id="SequenceFlow_149udra" sourceRef="watermark_delegate" targetRef="ExclusiveGateway_0dwgiat" />
     <bpmn:serviceTask id="watermark_delegate" name="Наложить текст на фото" camunda:delegateExpression="${watermarkDelegate}">
       <bpmn:incoming>SequenceFlow_11cfmzk</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_149udra</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="SequenceFlow_0w4iqs2" sourceRef="email_delegate" targetRef="EndEvent_1pvssq5" />
     <bpmn:serviceTask id="email_delegate" name="Отправить сообщение" camunda:delegateExpression="${emailDelegate}">
-      <bpmn:incoming>SequenceFlow_149udra</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_10baie8</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0w4iqs2</bpmn:outgoing>
     </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0dwgiat">
+      <bpmn:incoming>SequenceFlow_149udra</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1h9hote</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_10baie8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_10baie8" sourceRef="ExclusiveGateway_0dwgiat" targetRef="email_delegate" />
+    <bpmn:boundaryEvent id="BoundaryEvent_1wfp9rl" attachedToRef="email_delegate">
+      <bpmn:outgoing>SequenceFlow_1ab82ct</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_049wzug" camunda:errorMessageVariable="errorMessage" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1ab82ct" sourceRef="BoundaryEvent_1wfp9rl" targetRef="resendEmailTimer" />
+    <bpmn:sequenceFlow id="SequenceFlow_1h9hote" sourceRef="resendEmailTimer" targetRef="ExclusiveGateway_0dwgiat" />
+    <bpmn:intermediateCatchEvent id="resendEmailTimer">
+      <bpmn:incoming>SequenceFlow_1ab82ct</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1h9hote</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
   </bpmn:process>
+  <bpmn:error id="Error_049wzug" name="errorSendEmail" errorCode="errorSendEmail" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="study_camunda_2307_process">
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
@@ -52,7 +72,7 @@
         <di:waypoint x="227" y="121" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="EndEvent_1pvssq5_di" bpmnElement="EndEvent_1pvssq5">
-        <dc:Bounds x="827" y="103" width="36" height="36" />
+        <dc:Bounds x="928" y="103" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_19wac2k_di" bpmnElement="SequenceFlow_19wac2k">
         <di:waypoint x="424" y="121" />
@@ -90,17 +110,39 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_149udra_di" bpmnElement="SequenceFlow_149udra">
         <di:waypoint x="651" y="121" />
-        <di:waypoint x="694" y="121" />
+        <di:waypoint x="691" y="121" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="ServiceTask_1y6prvo_di" bpmnElement="watermark_delegate">
         <dc:Bounds x="551" y="81" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0w4iqs2_di" bpmnElement="SequenceFlow_0w4iqs2">
-        <di:waypoint x="794" y="121" />
-        <di:waypoint x="827" y="121" />
+        <di:waypoint x="895" y="121" />
+        <di:waypoint x="928" y="121" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="ServiceTask_0prg6q5_di" bpmnElement="email_delegate">
-        <dc:Bounds x="694" y="81" width="100" height="80" />
+        <dc:Bounds x="795" y="81" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0dwgiat_di" bpmnElement="ExclusiveGateway_0dwgiat" isMarkerVisible="true">
+        <dc:Bounds x="691" y="96" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_10baie8_di" bpmnElement="SequenceFlow_10baie8">
+        <di:waypoint x="741" y="121" />
+        <di:waypoint x="795" y="121" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BoundaryEvent_07n7dbn_di" bpmnElement="BoundaryEvent_1wfp9rl">
+        <dc:Bounds x="829" y="143" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ab82ct_di" bpmnElement="SequenceFlow_1ab82ct">
+        <di:waypoint x="847" y="179" />
+        <di:waypoint x="847" y="241" />
+        <di:waypoint x="734" y="241" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1h9hote_di" bpmnElement="SequenceFlow_1h9hote">
+        <di:waypoint x="716" y="223" />
+        <di:waypoint x="716" y="146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_16etemx_di" bpmnElement="resendEmailTimer">
+        <dc:Bounds x="698" y="223" width="36" height="36" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
