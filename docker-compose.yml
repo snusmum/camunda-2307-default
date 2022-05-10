@@ -1,0 +1,29 @@
+version: '2'
+
+services:
+  app:
+    image: 'camunda:latest'
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    container_name: cat-fact-service
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/camunda_test
+      - SPRING_DATASOURCE_USERNAME=postgres-test
+      - SPRING_DATASOURCE_PASSWORD=postgres-test
+      - MAIL_HOST=smtp.yandex.ru <or other host>
+      - MAIL_PORT=465 <or other port>
+      - MAIL_USERNAME=<sender email >
+      - MAIL_PASSWORD=<sender password>
+      - MAIL_SENDER=<sender visible email>
+
+  db:
+    image: 'postgres:13.1-alpine'
+    container_name: db
+    environment:
+      - POSTGRES_DB=camunda_test
+      - POSTGRES_USER=postgres-test
+      - POSTGRES_PASSWORD=postgres-test
